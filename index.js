@@ -1,25 +1,15 @@
 const util = require('util');
 const puppeteer = require('puppeteer');
 const axe = require('axe-core');
-const fs = require('fs');
+const {writeLog, consoleLog} = require('./src/utils/utils');
 
-const writeToFile = (data, name) => {
-    try {
-        const dir = './logs';
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir);
-        }
-        fs.writeFileSync('./logs/' + name + '.json', JSON.stringify(data))
-    } catch (err) {
-        console.error(err)
-    }
-}
 
 const urls = [
     'https://google.com',
     'https://yahoo.com',
     'http://www.levio.ca',
     'http://www.android.com',
+    // 'http://www.jdhglfjf7eb.com',
 ];
 
 puppeteer.launch().then(async browser => {
@@ -29,30 +19,36 @@ puppeteer.launch().then(async browser => {
 
     urls.map((url) => {
         asyncCalls.push(browser.newPage().then(async page => {
-            await page.goto(`${url}`);
+            try {
+                await page.setViewport({ width: 1366, height: 768});
+                await page.goto(`${url}`, {waitUntil: 'load', timeout: 10000});
 
-            await page.addScriptTag({
-                path: require.resolve('axe-core')
-            });
+                await page.addScriptTag({
+                    path: require.resolve('axe-core')
+                });
 
-            axeResults = await page.evaluate(async () => {
-                return await axe.run();
-            });
-            axeResults.url = url;
-            delete axeResults.passes;
-            delete axeResults.inapplicable;
-            delete axeResults.incomplete;
-            delete axeResults.testEngine;
-            delete axeResults.testRunner;
-            delete axeResults.toolOptions;
+                axeResults = await page.evaluate(async () => {
+                    return await axe.run();
+                });
+                axeResults.url = url;
+                delete axeResults.passes;
+                delete axeResults.inapplicable;
+                delete axeResults.incomplete;
+                delete axeResults.testEngine;
+                delete axeResults.testRunner;
+                delete axeResults.toolOptions;
 
-            urlResults.push(axeResults);
+                urlResults.push(axeResults);
+            } catch (e) {
+                console.log(`${url}: ${e.message}`);
+            }
         }))
     })
     await Promise.all(asyncCalls)
     browser.close();
 
-    const filename = 'logs' + Date.now().toString();
-    writeToFile(urlResults, filename)
-    console.log(util.inspect(urlResults, false, null, true))
+    const filename = 'log' + Date.now().toString();
+    writeLog(urlResults, filename);
+    consoleLog(urlResults);
+    // console.log(util.inspect(urlResults, false, null, true))
 });
