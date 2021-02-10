@@ -1,0 +1,17 @@
+{
+  "name": "jest-external-website",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "axe-core": "^4.1.2",
+    "jest": "^26.6.3",
+    "jest-puppeteer": "^4.4.0",
+    "puppeteer": "^7.0.4"
+  }
+}
